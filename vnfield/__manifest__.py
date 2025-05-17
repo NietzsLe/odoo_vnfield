@@ -42,7 +42,7 @@
         "data/ir_cron.xml",
     ],
     "post_init_hook": "start_kafka_consumers",
-    "license": "LGPL-3",
+    "license": "AGPL-3",
     "installable": True,
     "auto_install": False,
     "application": True,
