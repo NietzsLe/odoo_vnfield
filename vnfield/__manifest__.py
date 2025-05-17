@@ -23,6 +23,7 @@
     "name": "VN Field",
     "version": "17.0.1.0.1",
     "category": "Approval",
+    "author": "Nhan Le",
     "depends": ["base", "mail", "web_m2x_options", "rest_api_odoo"],
     "data": [
         "views/actions.xml",
