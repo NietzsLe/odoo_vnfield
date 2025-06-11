@@ -33,7 +33,7 @@ class Approval(models.Model):
 
     name = fields.Char(required=True)
     description = fields.Text()
-    approval_period = fields.Float(required=True)
+    approval_period = fields.Float(required=True, default=0.0)
     status = fields.Selection(
         selection=[
             ("draft", "Draft"),
@@ -66,40 +66,40 @@ class Approval(models.Model):
         store=True,
     )
 
-    @api.model
-    def create(self, vals):
-        # Thực hiện các xử lý trước khi tạo record
-        vals["status"] = "draft"
-        if not vals["priority"]:
-            vals["priority"] = "low"
-        approval = super(Approval, self).create(vals)
-        config = self.env["ir.config_parameter"].sudo()
-        ApprovalClient.post(approval, approval.id, config.get_param("connector_host"))
-        return approval
+    # @api.model
+    # def create(self, vals):
+    #     # Thực hiện các xử lý trước khi tạo record
+    #     vals["status"] = "draft"
+    #     if not vals["priority"]:
+    #         vals["priority"] = "low"
+    #     approval = super(Approval, self).create(vals)
+    #     config = self.env["ir.config_parameter"].sudo()
+    #     ApprovalClient.post(approval, approval.id, config.get_param("connector_host"))
+    #     return approval
 
-    @api.model
-    def unlink(self, vals):
-        print(vals)
-        removeItems = self.env["vnfield.approval"].browse(vals)
-        for record in removeItems:
-            if record.status != "draft":
-                raise UserError('Cannot delete record because it is in "draft" status.')
-        approval = super(Approval, removeItems).unlink()
-        config = self.env["ir.config_parameter"].sudo()
-        print(vals)
-        if approval:
-            for item in removeItems:
-                ApprovalClient.delete(item.id, config.get_param("connector_host"))
-        return approval
+    # @api.model
+    # def unlink(self, vals):
+    #     print(vals)
+    #     removeItems = self.env["vnfield.approval"].browse(vals)
+    #     for record in removeItems:
+    #         if record.status != "draft":
+    #             raise UserError('Cannot delete record because it is in "draft" status.')
+    #     approval = super(Approval, removeItems).unlink()
+    #     config = self.env["ir.config_parameter"].sudo()
+    #     print(vals)
+    #     if approval:
+    #         for item in removeItems:
+    #             ApprovalClient.delete(item.id, config.get_param("connector_host"))
+    #     return approval
 
-    @api.model
-    def write(self, vals):
-        approval = super(Approval, self).write(vals)
-        config = self.env["ir.config_parameter"].sudo()
-        print(self)
-        if approval:
-            ApprovalClient.put(self, self.id, config.get_param("connector_host"))
-        return approval
+    # @api.model
+    # def write(self, vals):
+    #     approval = super(Approval, self).write(vals)
+    #     config = self.env["ir.config_parameter"].sudo()
+    #     print(self)
+    #     if approval:
+    #         ApprovalClient.put(self, self.id, config.get_param("connector_host"))
+    #     return approval
 
     def handle_send(self):
         self.request_at = fields.Datetime.now()
@@ -113,8 +113,8 @@ class Approval(models.Model):
             root_step.come_at = fields.Datetime.now()
         return True
 
-    @api.model
-    def read(self, fields=None, load="_classic_read"):
-        # Gọi super để lấy dữ liệu gốc
-        # print(http.request.env["ir.attachment"].search_read(fields=["datas"]))
-        return super(Approval, self).read(fields=fields, load=load)
+    # @api.model
+    # def read(self, fields=None, load="_classic_read"):
+    #     # Gọi super để lấy dữ liệu gốc
+    #     # print(http.request.env["ir.attachment"].search_read(fields=["datas"]))
+    #     return super(Approval, self).read(fields=fields, load=load)

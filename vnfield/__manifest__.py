@@ -42,7 +42,7 @@
         "security/security.xml",
         "data/ir_cron.xml",
     ],
-    "post_init_hook": "start_kafka_consumers",
+    # "post_init_hook": "start_kafka_consumers",
     "license": "AGPL-3",
     "installable": True,
     "auto_install": False,
