@@ -49,57 +49,57 @@ class ApprovalStep(models.Model):
         column2="attachment_id",
     )
 
-    # @api.model
-    # def create(self, vals):
-    #     # Thực hiện các xử lý trước khi tạo record
-    #     vals["status"] = "waiting"
-    #     step = super(ApprovalStep, self).create(vals)
-    #     if "root_of_approval_id" in vals:
-    #         step.approval_id = vals["root_of_approval_id"]
+    @api.model
+    def create(self, vals):
+        # Thực hiện các xử lý trước khi tạo record
+        vals["status"] = "waiting"
+        step = super(ApprovalStep, self).create(vals)
+        if "root_of_approval_id" in vals:
+            step.approval_id = vals["root_of_approval_id"]
 
-    #     return step
+        return step
 
-    # @api.model
-    # def unlink(self, vals):
-    #     removeItems = self.env["vnfield.approval.step"].browse(vals)
-    #     for record in removeItems:
-    #         if record.status != "waiting":
-    #             raise UserError(
-    #                 'Cannot delete record because it is in "waiting" status.'
-    #             )
-    #     return super(ApprovalStep, removeItems).unlink()
+    @api.model
+    def unlink(self, vals):
+        removeItems = self.env["vnfield.approval.step"].browse(vals)
+        for record in removeItems:
+            if record.status != "waiting":
+                raise UserError(
+                    'Cannot delete record because it is in "waiting" status.'
+                )
+        return super(ApprovalStep, removeItems).unlink()
 
-    # @api.constrains("next_step_ids")
-    # def _check_next_step(self):
-    #     for next_step in self.next_step_ids:
-    #         if next_step.approval_id != self.approval_id:
-    #             raise ValidationError("Next step's approval must be same this step!")
-    #         prevList = set(map(lambda x: x.id, self.prev_step_ids))
-    #         prevList.add(self.id)
-    #         qu = []
-    #         qu = list(map(lambda x: x.id, self.prev_step_ids)) + qu
-    #         while len(qu) != 0:
-    #             removeItem = qu.pop()
-    #             prevs = list(
-    #                 map(
-    #                     lambda x: x.id,
-    #                     self.env["vnfield.approval.step"]
-    #                     .browse(removeItem)
-    #                     .prev_step_ids,
-    #                 )
-    #             )
-    #             print(prevs)
-    #             if next_step.id in prevList:
-    #                 raise ValidationError(
-    #                     "The next task should not be assigned in a circular loop!"
-    #                 )
-    #             prevList.update(prevs)
-    #             qu = prevs + qu
+    @api.constrains("next_step_ids")
+    def _check_next_step(self):
+        for next_step in self.next_step_ids:
+            if next_step.approval_id != self.approval_id:
+                raise ValidationError("Next step's approval must be same this step!")
+            prevList = set(map(lambda x: x.id, self.prev_step_ids))
+            prevList.add(self.id)
+            qu = []
+            qu = list(map(lambda x: x.id, self.prev_step_ids)) + qu
+            while len(qu) != 0:
+                removeItem = qu.pop()
+                prevs = list(
+                    map(
+                        lambda x: x.id,
+                        self.env["vnfield.approval.step"]
+                        .browse(removeItem)
+                        .prev_step_ids,
+                    )
+                )
+                print(prevs)
+                if next_step.id in prevList:
+                    raise ValidationError(
+                        "The next task should not be assigned in a circular loop!"
+                    )
+                prevList.update(prevs)
+                qu = prevs + qu
 
-    # @api.constrains("approval_id")
-    # def _check_approval_id(self):
-    #     if self.root_of_approval_id and self.root_of_approval_id != self.approval_id:
-    #         raise ValidationError("'Approval' must be the same as 'Root of approval'!")
+    @api.constrains("approval_id")
+    def _check_approval_id(self):
+        if self.root_of_approval_id and self.root_of_approval_id != self.approval_id:
+            raise ValidationError("'Approval' must be the same as 'Root of approval'!")
 
     def open_form_view(self):
         form_view_id = self.env.ref("vnfield.approval_step_form_view").id
