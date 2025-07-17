@@ -577,5 +577,3 @@ Dashboard accessible at: `/user-contractor/dashboard`
 API endpoint: `/user-contractor/api/users/<contractor_id>`
 
 ---
-
-_Tài liệu này được tạo bởi GitHub Copilot vào ngày 17/07/2025_

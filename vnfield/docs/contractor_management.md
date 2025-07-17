@@ -582,8 +582,3 @@ def test_user_contractor_assignment(self):
 - [Field Types Documentation](https://www.odoo.com/documentation/17.0/developer/reference/backend/orm.html#fields)
 
 ---
-
-**📝 Document Version**: 1.0  
-**📅 Last Updated**: July 17, 2025  
-**👤 Author**: GitHub Copilot  
-**🎯 Project**: VNField Contractor Management System

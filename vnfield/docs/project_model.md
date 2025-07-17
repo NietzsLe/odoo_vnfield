@@ -385,7 +385,3 @@ self.message_post(
 - **Audit Trail**: Full history của mọi thay đổi
 
 ---
-
-_Document Version: 1.0_  
-_Last Updated: July 17, 2025_  
-_Author: GitHub Copilot Assistant_

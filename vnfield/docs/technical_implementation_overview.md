@@ -511,7 +511,3 @@ vnfield_repo/vnfield/
 | [Security System](./security_system.md)                  | Permission details  | Administrators |
 
 ---
-
-_Technical Implementation Overview - Version 1.0_  
-_Created: July 17, 2025_  
-_By: GitHub Copilot Assistant_

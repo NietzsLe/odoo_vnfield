@@ -347,8 +347,3 @@ print(f"Next code: {next_code}")
 - [Field Attributes](https://www.odoo.com/documentation/17.0/developer/reference/backend/orm.html#field-attributes)
 
 ---
-
-**📝 Document Version**: 1.0  
-**📅 Last Updated**: July 17, 2025  
-**👤 Author**: GitHub Copilot  
-**🎯 Project**: VNField Auto-Generation System

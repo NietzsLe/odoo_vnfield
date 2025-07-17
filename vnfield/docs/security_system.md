@@ -489,8 +489,3 @@ print(f"Task rules: {rules.mapped('name')}")
 - [Record Rules](https://www.odoo.com/documentation/17.0/developer/reference/backend/security.html#record-rules)
 
 ---
-
-**📝 Document Version**: 1.0  
-**📅 Last Updated**: July 17, 2025  
-**👤 Author**: GitHub Copilot  
-**🎯 Project**: VNField Security System

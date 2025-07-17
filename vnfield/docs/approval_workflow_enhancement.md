@@ -464,5 +464,3 @@ vnfield/
 - [README](./README.md)
 
 ---
-
-_Tài liệu này được tạo bởi GitHub Copilot vào ngày 17/07/2025_
