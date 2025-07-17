@@ -6,17 +6,19 @@
         <field name="arch" type="xml">
             <tree editable="top" open_form_view="True">
                 <field name="id" />
-                <field name="name" readonly="status!='comming'and status" />
-                <field name="step_type_id" readonly="status!='comming'and status" />
-                <field name="approval_step_period" readonly="status!='comming'and status" />
-                <field name="status" />
+                <field name="name" readonly="status != 'waiting'" />
+                <field name="approver_id" readonly="status != 'waiting'" />
+                <field name="approval_step_period" readonly="status != 'waiting'" />
+                <field name="status" decoration-success="status == 'approved'"
+                    decoration-warning="status == 'in-progress'"
+                    decoration-danger="status == 'rejected'" />
                 <field name="come_at" />
                 <field name="approval_at" />
-                <field name="approver_id" readonly="status!='comming'and status" />
+                <field name="duration_hours" string="Duration (h)" />
+                <field name="is_overdue" invisible="1" />
+                <field name="can_user_approve" invisible="1" />
                 <field name="approval_id" />
-                <!-- <button name="open_form_view" type="object" string="Open form"
-                    class="btn-primary" /> -->
-                <button invisible="status!='processing'" name="handle_click_review" type="object"
+                <button invisible="not can_user_approve" name="handle_click_review" type="object"
                     string="Review"
                     class="btn-primary" />
             </tree>
@@ -24,22 +26,26 @@
     </record>
 
     <record model="ir.ui.view" id="approval_step_not_create_not_delete_tree_view">
-        <field name="name">approval.step.tree</field>
+        <field name="name">approval.step.tree.readonly</field>
         <field name="model">vnfield.approval.step</field>
         <field name="arch" type="xml">
             <tree editable="top" create="false">
                 <field name="id" />
-                <field name="name" readonly="status!='comming'and status" />
-                <field name="step_type_id" readonly="status!='comming'and status" />
-                <field name="approval_step_period" readonly="status!='comming'and status" />
-                <field name="status" />
+                <field name="name" readonly="status != 'waiting'" />
+                <field name="approver_id" readonly="status != 'waiting'" />
+                <field name="approval_step_period" readonly="status != 'waiting'" />
+                <field name="status" decoration-success="status == 'approved'"
+                    decoration-warning="status == 'in-progress'"
+                    decoration-danger="status == 'rejected'" />
                 <field name="come_at" />
                 <field name="approval_at" />
-                <field name="approver_id" readonly="status!='comming'and status" />
+                <field name="duration_hours" string="Duration (h)" />
+                <field name="is_overdue" invisible="1" />
+                <field name="can_user_approve" invisible="1" />
                 <field name="approval_id" />
-                <button name="open_form_view" type="object" string="Open form"
-                    class="btn-primary" />
-                <button invisible="status!='processing'" name="handle_click_review" type="object"
+                <button name="open_form_view" type="object" string="View Details"
+                    class="btn-secondary" />
+                <button invisible="not can_user_approve" name="handle_click_review" type="object"
                     string="Review"
                     class="btn-primary" />
             </tree>
@@ -51,47 +57,85 @@
         <field name="model">vnfield.approval.step</field>
         <field name="arch" type="xml">
             <form create="false">
+                <header>
+                    <button name="action_approve" type="object" string="✅ Approve"
+                        class="btn-success"
+                        invisible="not can_user_approve or status != 'in-progress'" />
+                    <button name="action_reject" type="object" string="❌ Reject"
+                        class="btn-danger"
+                        invisible="not can_user_approve or status != 'in-progress'" />
+                    <button name="action_reset_to_waiting" type="object" string="🔄 Reset"
+                        class="btn-warning" groups="vnfield.group_contractor_admin"
+                        invisible="status == 'waiting'" />
+                    <field name="status" widget="statusbar"
+                        statusbar_visible="waiting,in-progress,approved,rejected" />
+                </header>
                 <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="status != 'waiting'"
+                                placeholder="Step Name..." />
+                        </h1>
+                    </div>
+
+                    <!-- Permission flags -->
+                    <field name="can_user_approve" invisible="1" />
+                    <field name="is_overdue" invisible="1" />
+
+                    <!-- Alert for overdue -->
+                    <div class="alert alert-warning" role="alert" invisible="not is_overdue">
+                        <strong>⚠️ Overdue!</strong> This step is past its deadline. </div>
+
+                    <!-- Basic Information -->
                     <group>
                         <group>
-                            <field name="id" />
-                            <field name="name" readonly="status!='comming'and status" />
-                            <field name="description" readonly="status!='comming'and status" />
-                            <field name="come_at" />
-                            <field name="approval_at" />
-                            <field name="approval_step_period"
-                                readonly="status!='comming'and status" />
+                            <field name="id" invisible="not id" />
+                            <field name="requester_id" readonly="1" />
+                            <field name="approver_id" readonly="status != 'waiting'" />
+                            <field name="approval_step_period" readonly="status != 'waiting'" />
+                            <field name="description" readonly="status != 'waiting'" />
                         </group>
                         <group>
-                            <field name="status" />
-                            <field name="comment" readonly="status=='comming'" />
-                            <field name="step_type_id" readonly="status!='comming'and status" />
-                            <field name="approver_id" readonly="status!='comming'and status" />
+                            <field name="come_at" readonly="1" />
+                            <field name="approval_at" readonly="1" />
+                            <field name="duration_hours" string="Duration (hours)" readonly="1" />
+                            <field name="comment"
+                                readonly="status not in ('in-progress', 'approved', 'rejected')" />
                             <field name="approval_id" />
+                            <field name="root_of_approval_id" />
                         </group>
                     </group>
+                    <!-- Workflow Navigation -->
                     <notebook>
-                        <page string="Next Step">
-                            <field name="next_step_ids"
-                                options="{ 'create': False, 'create_edit': False}"
-                            ></field>
-
-                        </page>
-                        <page string="Previous Step">
-                            <field name="prev_step_ids"
-                                options="{ 'create': False, 'create_edit': False}"
-                                readonly="status!='comming'and status"
-                            />
-                        </page>
-                        <page string="Attachments">
+                        <page string="🔄 Workflow Navigation">
                             <group>
-                                <field name="attachment_ids"
-                                    widget="many2many_binary" />
+                                <group string="Next Steps">
+                                    <field name="next_step_ids" nolabel="1"
+                                        options="{ 'create': False, 'create_edit': False}">
+                                        <tree>
+                                            <field name="name" />
+                                            <field name="approver_id" />
+                                            <field name="status" />
+                                        </tree>
+                                    </field>
+                                </group>
+                                <group string="Previous Steps">
+                                    <field name="prev_step_ids" nolabel="1"
+                                        options="{ 'create': False, 'create_edit': False}"
+                                        readonly="status != 'waiting'">
+                                        <tree>
+                                            <field name="name" />
+                                            <field name="approver_id" />
+                                            <field name="status" />
+                                        </tree>
+                                    </field>
+                                </group>
                             </group>
                         </page>
-
+                        <page string="📎 Attachments">
+                            <field name="attachment_ids" widget="many2many_binary" />
+                        </page>
                     </notebook>
-
 
                     <!-- <field name="verify_for_task_id" /> -->
                 </sheet>
@@ -102,6 +146,12 @@
                 </div>
             </form>
         </field>
+    </record>
+
+    <record id="vnfield_approval_step_action" model="ir.actions.act_window">
+        <field name="name">Approval Step</field>
+        <field name="res_model">vnfield.approval.step</field>
+        <field name="view_mode">tree,form</field>
     </record>
 
 </odoo>

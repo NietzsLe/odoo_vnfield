@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═              🎯 PROJECT DASHBOARD VIEWS                  ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ─────────────── 🏗️ PROJECT DASHBOARD TEMPLATE ─────────────── -->
+    <template id="project_dashboard_template" name="Project Dashboard">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <style>
+                    .project-sidebar {
+                    background: #f8f9fa;
+                    border-right: 1px solid #dee2e6;
+                    height: 100vh;
+                    overflow-y: auto;
+                    }
+                    .project-item {
+                    padding: 10px 15px;
+                    border-bottom: 1px solid #e9ecef;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                    }
+                    .project-item:hover {
+                    background-color: #e9ecef;
+                    }
+                    .project-item.active {
+                    background-color: #007bff;
+                    color: white;
+                    }
+                    .dashboard-main {
+                    padding: 20px;
+                    }
+                    .metric-card {
+                    background: white;
+                    border: 1px solid #dee2e6;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .metric-number {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    color: #007bff;
+                    }
+                    .section-title {
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                    margin-bottom: 15px;
+                    color: #343a40;
+                    }
+                </style>
+            </t>
+
+            <div class="container-fluid p-0">
+                <div class="row no-gutters">
+                    <!-- 📋 LEFT SIDEBAR - PROJECT SELECTION -->
+                    <div class="col-3 project-sidebar">
+                        <div class="p-3">
+                            <h5 class="mb-3">
+                                <i class="fa fa-folder-open"></i> Projects </h5>
+
+                            <!-- Project List -->
+                            <t t-foreach="projects" t-as="project">
+                                <div class="project-item"
+                                    t-att-class="'active' if project.id == (selected_project.id if selected_project else 0) else ''"
+                                    onclick="window.location.href='/projects/dashboard?project_id=' + '${project.id}'">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="font-weight-bold">
+                                                <t t-esc="project.name" />
+                                            </div>
+                                            <small class="text-muted">
+                                                <t t-esc="project.code" />
+                                            </small>
+                                        </div>
+
+                                        <div class="text-right">
+                                            <!-- Status Badge -->
+                                            <span
+                                                t-att-class="'badge badge-' + ('success' if project.status == 'completed' else 'info' if project.status == 'in-progress' else 'warning')">
+                                                <t t-esc="project.status" />
+                                            </span>
+
+                                            <!-- Progress -->
+                                            <div class="small mt-1">
+                                                <t t-esc="project.progress" />% Complete </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Create New Project Button -->
+                            <div class="mt-3">
+                                <a
+                                    href="/web#action=vnfield.vnfield_project_action&amp;view_type=form"
+                                    class="btn btn-primary btn-block">
+                                    <i class="fa fa-plus"></i> New Project </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 📊 MAIN DASHBOARD CONTENT -->
+                    <div class="col-9 dashboard-main">
+                        <t t-if="selected_project">
+                            <!-- 🏷️ Project Header -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h2 class="mb-1">
+                                                <t t-esc="selected_project.name" />
+                                            </h2>
+                                            <p class="text-muted mb-0">
+                                                <t t-esc="selected_project.description" />
+                                            </p>
+                                        </div>
+
+                                        <div class="text-right">
+                                            <span
+                                                t-att-class="'badge badge-lg badge-' + ('success' if selected_project.status == 'completed' else 'info' if selected_project.status == 'in-progress' else 'warning')">
+                                                <t t-esc="selected_project.status" />
+                                            </span>
+
+                                            <div class="mt-2">
+                                                <a
+                                                    t-attf-href="/web#id=#{selected_project.id}&amp;view_type=form&amp;model=vnfield.project"
+                                                    class="btn btn-outline-primary btn-sm">
+                                                    <i class="fa fa-edit"></i> Edit Project </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 📊 Key Metrics Row -->
+                            <div class="row mb-4">
+                                <div class="col-3">
+                                    <div class="metric-card text-center">
+                                        <div class="metric-number">
+                                            <t t-esc="selected_project.progress" />% </div>
+                                        <div class="text-muted">Progress</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="metric-card text-center">
+                                        <div class="metric-number">
+                                            <t t-esc="len(tasks)" />
+                                        </div>
+                                        <div class="text-muted">Tasks</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="metric-card text-center">
+                                        <div class="metric-number">
+                                            <t t-esc="len(members)" />
+                                        </div>
+                                        <div class="text-muted">Members</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="metric-card text-center">
+                                        <div class="metric-number">
+                                            <t t-esc="len(approvals)" />
+                                        </div>
+                                        <div class="text-muted">Approvals</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 📋 Content Sections -->
+                            <div class="row">
+                                <!-- 👥 Team Members -->
+                                <div class="col-6">
+                                    <div class="metric-card">
+                                        <h5 class="section-title">
+                                            <i class="fa fa-users"></i> Team Members </h5>
+
+                                        <t t-if="members">
+                                            <t t-foreach="members" t-as="member">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="mr-3">
+                                                        <img
+                                                            t-att-src="'/web/image/res.users/' + str(member.id) + '/avatar_128'"
+                                                            class="rounded-circle"
+                                                            style="width: 40px; height: 40px;" />
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-weight-bold">
+                                                            <t t-esc="member.name" />
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            <t t-esc="member.email" />
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <p class="text-muted">No team members assigned</p>
+                                        </t>
+
+                                        <a
+                                            t-attf-href="/web#action=vnfield.vnfield_project_action&amp;id=#{selected_project.id}&amp;view_type=form&amp;menu_id=vnfield.menu_project_root"
+                                            class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-plus"></i> Manage Team </a>
+                                    </div>
+                                </div>
+
+                                <!-- 🏢 Contractors -->
+                                <div class="col-6">
+                                    <div class="metric-card">
+                                        <h5 class="section-title">
+                                            <i class="fa fa-building"></i> Contractors </h5>
+
+                                        <t t-if="contractors">
+                                            <t t-foreach="contractors" t-as="contractor">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="mr-3">
+                                                        <i class="fa fa-building fa-2x text-primary"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-weight-bold">
+                                                            <t t-esc="contractor.name" />
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            <t t-esc="contractor.contractor_type" />
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <p class="text-muted">No contractors assigned</p>
+                                        </t>
+
+                                        <a
+                                            t-attf-href="/web#action=vnfield.vnfield_project_action&amp;id=#{selected_project.id}&amp;view_type=form&amp;menu_id=vnfield.menu_project_root"
+                                            class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-plus"></i> Manage Contractors </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- 📋 Tasks -->
+                                <div class="col-6">
+                                    <div class="metric-card">
+                                        <h5 class="section-title">
+                                            <i class="fa fa-tasks"></i> Recent Tasks </h5>
+
+                                        <t t-if="tasks">
+                                            <t t-foreach="tasks[:5]" t-as="task">
+                                                <div
+                                                    class="d-flex justify-content-between align-items-center mb-2">
+                                                    <div>
+                                                        <div class="font-weight-bold">
+                                                            <t t-esc="task.name" />
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            <t
+                                                                t-esc="task.assignee_id.name if task.assignee_id else 'Unassigned'" />
+                                                        </small>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <span
+                                                            t-att-class="'badge badge-' + ('success' if task.status == 'completed' else 'info' if task.status == 'in-progress' else 'secondary')">
+                                                            <t t-esc="task.status" />
+                                                        </span>
+                                                        <div class="small">
+                                                            <t t-esc="task.progress" />% </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <p class="text-muted">No tasks found</p>
+                                        </t>
+
+                                        <a
+                                            href="/web#action=vnfield.task_action_vnfield&amp;view_type=kanban"
+                                            class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-plus"></i> View All Tasks </a>
+                                    </div>
+                                </div>
+
+                                <!-- ✅ Approvals -->
+                                <div class="col-6">
+                                    <div class="metric-card">
+                                        <h5 class="section-title">
+                                            <i class="fa fa-check-circle"></i> Recent Approvals </h5>
+
+                                        <t t-if="approvals">
+                                            <t t-foreach="approvals[:5]" t-as="approval">
+                                                <div
+                                                    class="d-flex justify-content-between align-items-center mb-2">
+                                                    <div>
+                                                        <div class="font-weight-bold">
+                                                            <t t-esc="approval.name" />
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            <t
+                                                                t-esc="approval.create_date.strftime('%Y-%m-%d') if approval.create_date else ''" />
+                                                        </small>
+                                                    </div>
+                                                    <div>
+                                                        <span
+                                                            t-att-class="'badge badge-' + ('success' if approval.status == 'approved' else 'warning' if approval.status == 'pending' else 'danger')">
+                                                            <t t-esc="approval.status" />
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <p class="text-muted">No approvals found</p>
+                                        </t>
+
+                                        <a
+                                            href="/web#action=vnfield.approval_action_vnfield&amp;view_type=kanban"
+                                            class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-plus"></i> View All Approvals </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </t>
+                        <t t-else="">
+                            <!-- 📭 No Projects State -->
+                            <div class="text-center mt-5">
+                                <div class="mb-4">
+                                    <i class="fa fa-folder-open fa-5x text-muted"></i>
+                                </div>
+                                <h3 class="text-muted">No Projects Found</h3>
+                                <p class="text-muted">Create your first project to get started</p>
+                                <a
+                                    href="/web#action=vnfield.vnfield_project_action&amp;view_type=form"
+                                    class="btn btn-primary">
+                                    <i class="fa fa-plus"></i> Create Project </a>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

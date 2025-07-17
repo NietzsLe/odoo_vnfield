@@ -1,83 +1,315 @@
 <odoo>
-    <record id="access_vnfield_approval_model_public" model="ir.model.access">
-        <field name="name">vnfield.approval.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_approval" />
-        <field name="group_id" ref="base.group_user" />
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                   👥 USER GROUPS                         ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- 👤 Basic User Group - Can view and work on assigned tasks -->
+    <record id="group_vnfield_user" model="res.groups">
+        <field name="name">VNField User</field>
+        <field name="comment">Basic users who can view and work on assigned tasks</field>
+        <field name="category_id" ref="base.module_category_services" />
+    </record>
+
+    <!-- 🏃‍♂️ Project Manager Group - Can manage projects and tasks -->
+    <record id="group_vnfield_manager" model="res.groups">
+        <field name="name">VNField Manager</field>
+        <field name="comment">Project managers who can create and manage projects and tasks</field>
+        <field name="category_id" ref="base.module_category_services" />
+        <field name="implied_ids" eval="[(4, ref('group_vnfield_user'))]" />
+    </record>
+
+    <!-- 🔍 Verifier Group - Can verify and approve tasks -->
+    <record id="group_vnfield_verifier" model="res.groups">
+        <field name="name">VNField Verifier</field>
+        <field name="comment">Users who can verify task completion and handle approvals</field>
+        <field name="category_id" ref="base.module_category_services" />
+        <field name="implied_ids" eval="[(4, ref('group_vnfield_user'))]" />
+    </record>
+
+    <!-- 👑 Admin Group - Full system access -->
+    <record id="group_vnfield_admin" model="res.groups">
+        <field name="name">VNField Administrator</field>
+        <field name="comment">System administrators with full access</field>
+        <field name="category_id" ref="base.module_category_services" />
+        <field name="implied_ids"
+            eval="[(4, ref('group_vnfield_manager')), (4, ref('group_vnfield_verifier'))]" />
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═             🔐 CONTRACTOR PERMISSION GROUPS              ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- 👤 Basic Contractor User Group -->
+    <record model="res.groups" id="group_contractor_user">
+        <field name="name">VNField: Contractor User</field>
+        <field name="category_id" ref="base.module_category_services" />
+        <field name="comment">Basic contractor user with read access to own contractor data</field>
+        <field name="implied_ids" eval="[(4, ref('group_vnfield_user'))]" />
+    </record>
+
+    <!-- 👔 Contractor Manager Group -->
+    <record model="res.groups" id="group_contractor_manager">
+        <field name="name">VNField: Contractor Manager</field>
+        <field name="category_id" ref="base.module_category_services" />
+        <field name="comment">Contractor manager with enhanced permissions for task and project
+            management</field>
+        <field name="implied_ids"
+            eval="[(4, ref('group_contractor_user')), (4, ref('group_vnfield_manager'))]" />
+    </record>
+
+    <!-- 👑 Contractor Leader Group -->
+    <record model="res.groups" id="group_contractor_leader">
+        <field name="name">VNField: Contractor Leader</field>
+        <field name="category_id" ref="base.module_category_services" />
+        <field name="comment">Contractor leader with permission to assign roles and manage users
+            within contractor</field>
+        <field name="implied_ids" eval="[(4, ref('group_contractor_manager'))]" />
+    </record>
+
+    <!-- 🛡️ Contractor Administrator Group -->
+    <record model="res.groups" id="group_contractor_admin">
+        <field name="name">VNField: Contractor Administrator</field>
+        <field name="category_id" ref="base.module_category_services" />
+        <field name="comment">Full administrative access to contractor management system</field>
+        <field name="implied_ids"
+            eval="[(4, ref('group_contractor_leader')), (4, ref('group_vnfield_admin'))]" />
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                📋 TASK MODEL ACCESS RIGHTS              ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Task access for basic users -->
+    <record id="access_vnfield_task_user" model="ir.model.access">
+        <field name="name">vnfield.task.user</field>
+        <field name="model_id" ref="model_vnfield_task" />
+        <field name="group_id" ref="group_vnfield_user" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Task access for managers -->
+    <record id="access_vnfield_task_manager" model="ir.model.access">
+        <field name="name">vnfield.task.manager</field>
+        <field name="model_id" ref="model_vnfield_task" />
+        <field name="group_id" ref="group_vnfield_manager" />
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
     </record>
-    <record id="access_vnfield_approval_step_model_public" model="ir.model.access">
-        <field name="name">vnfield.approval.step.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_approval_step" />
-        <field name="group_id" ref="base.group_user" />
+
+    <!-- Task access for verifiers -->
+    <record id="access_vnfield_task_verifier" model="ir.model.access">
+        <field name="name">vnfield.task.verifier</field>
+        <field name="model_id" ref="model_vnfield_task" />
+        <field name="group_id" ref="group_vnfield_verifier" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                🏗️ PROJECT MODEL ACCESS RIGHTS           ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Project access for basic users - read only -->
+    <record id="access_vnfield_project_user" model="ir.model.access">
+        <field name="name">vnfield.project.user</field>
+        <field name="model_id" ref="model_vnfield_project" />
+        <field name="group_id" ref="group_vnfield_user" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Project access for managers -->
+    <record id="access_vnfield_project_manager" model="ir.model.access">
+        <field name="name">vnfield.project.manager</field>
+        <field name="model_id" ref="model_vnfield_project" />
+        <field name="group_id" ref="group_vnfield_manager" />
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
     </record>
-    <record id="access_approval_step_type_model_public" model="ir.model.access">
-        <field name="name">vnfield.approval.step.type.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_approval_step_type" />
-        <field name="group_id" ref="base.group_user" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                ✅ APPROVAL MODEL ACCESS RIGHTS          ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Approval access for basic users - read only -->
+    <record id="access_vnfield_approval_user" model="ir.model.access">
+        <field name="name">vnfield.approval.user</field>
+        <field name="model_id" ref="model_vnfield_approval" />
+        <field name="group_id" ref="group_vnfield_user" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Approval access for verifiers -->
+    <record id="access_vnfield_approval_verifier" model="ir.model.access">
+        <field name="name">vnfield.approval.verifier</field>
+        <field name="model_id" ref="model_vnfield_approval" />
+        <field name="group_id" ref="group_vnfield_verifier" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Approval access for managers -->
+    <record id="access_vnfield_approval_manager" model="ir.model.access">
+        <field name="name">vnfield.approval.manager</field>
+        <field name="model_id" ref="model_vnfield_approval" />
+        <field name="group_id" ref="group_vnfield_manager" />
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
     </record>
-    <record id="access_vnfield_issue_model_public" model="ir.model.access">
-        <field name="name">vnfield.issue.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_issue" />
-        <field name="group_id" ref="base.group_user" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                🔧 SUPPORT MODEL ACCESS RIGHTS           ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Approval Step access -->
+    <record id="access_vnfield_approval_step_user" model="ir.model.access">
+        <field name="name">vnfield.approval.step.user</field>
+        <field name="model_id" ref="model_vnfield_approval_step" />
+        <field name="group_id" ref="group_vnfield_user" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <record id="access_vnfield_approval_step_verifier" model="ir.model.access">
+        <field name="name">vnfield.approval.step.verifier</field>
+        <field name="model_id" ref="model_vnfield_approval_step" />
+        <field name="group_id" ref="group_vnfield_verifier" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Approval Step Type access -->
+    <record id="access_vnfield_approval_step_type_user" model="ir.model.access">
+        <field name="name">vnfield.approval.step.type.user</field>
+        <field name="model_id" ref="model_vnfield_approval_step_type" />
+        <field name="group_id" ref="group_vnfield_user" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <record id="access_vnfield_approval_step_type_manager" model="ir.model.access">
+        <field name="name">vnfield.approval.step.type.manager</field>
+        <field name="model_id" ref="model_vnfield_approval_step_type" />
+        <field name="group_id" ref="group_vnfield_manager" />
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
     </record>
-    <record id="access_vnfield_issue_type_model_public" model="ir.model.access">
-        <field name="name">vnfield.issue.type.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_issue_type" />
-        <field name="group_id" ref="base.group_user" />
+
+    <!-- Contractor access -->
+    <record id="access_vnfield_contractor_user" model="ir.model.access">
+        <field name="name">vnfield.contractor.user</field>
+        <field name="model_id" ref="model_vnfield_contractor" />
+        <field name="group_id" ref="group_vnfield_user" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <record id="access_vnfield_contractor_manager" model="ir.model.access">
+        <field name="name">vnfield.contractor.manager</field>
+        <field name="model_id" ref="model_vnfield_contractor" />
+        <field name="group_id" ref="group_vnfield_manager" />
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
     </record>
-    <record id="access_vnfield_project_model_public" model="ir.model.access">
-        <field name="name">vnfield.project.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_project" />
-        <field name="group_id" ref="base.group_user" />
-        <field name="perm_read" eval="True" />
-        <field name="perm_write" eval="True" />
-        <field name="perm_create" eval="True" />
-        <field name="perm_unlink" eval="True" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                🔒 RECORD RULES                          ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Task record rule - Users can only see tasks where they are involved -->
+    <record id="task_user_rule" model="ir.rule">
+        <field name="name">Task User Access Rule</field>
+        <field name="model_id" ref="model_vnfield_task" />
+        <field name="domain_force">[
+            '|', '|', '|',
+            ('assignee_id', '=', user.id),
+            ('assigner_id', '=', user.id),
+            ('verifier_id', '=', user.id),
+            ('project_id.manager_id', '=', user.id)
+            ]</field>
+        <field name="groups" eval="[(4, ref('group_vnfield_user'))]" />
     </record>
-    <record id="access_vnfield_task_model_public" model="ir.model.access">
-        <field name="name">vnfield.task.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_task" />
-        <field name="group_id" ref="base.group_user" />
-        <field name="perm_read" eval="True" />
-        <field name="perm_write" eval="True" />
-        <field name="perm_create" eval="True" />
-        <field name="perm_unlink" eval="True" />
+
+    <!-- Task record rule for managers - Can see all tasks in their projects -->
+    <record id="task_manager_rule" model="ir.rule">
+        <field name="name">Task Manager Access Rule</field>
+        <field name="model_id" ref="model_vnfield_task" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_vnfield_manager'))]" />
     </record>
-    <record id="access_vnfield_task_type_model_public" model="ir.model.access">
-        <field name="name">vnfield.task_type.model.access</field>
-        <field name="model_id" ref="vnfield.model_vnfield_task_type" />
-        <field name="group_id" ref="base.group_user" />
-        <field name="perm_read" eval="True" />
-        <field name="perm_write" eval="True" />
-        <field name="perm_create" eval="True" />
-        <field name="perm_unlink" eval="True" />
+
+    <!-- Project record rule - Users can only see projects where they are members or managers -->
+    <record id="project_user_rule" model="ir.rule">
+        <field name="name">Project User Access Rule</field>
+        <field name="model_id" ref="model_vnfield_project" />
+        <field name="domain_force">[
+            '|', '|',
+            ('manager_id', '=', user.id),
+            ('member_ids', 'in', user.id),
+            ('task_ids.assignee_id', '=', user.id)
+            ]</field>
+        <field name="groups" eval="[(4, ref('group_vnfield_user'))]" />
     </record>
-    <record id="access_vnfield_approval_review_model_public" model="ir.model.access">
-        <field name="name">vnfield.approval.review</field>
-        <field name="model_id" ref="vnfield.model_vnfield_approval_review" />
-        <field name="group_id" ref="base.group_user" />
-        <field name="perm_read" eval="True" />
-        <field name="perm_write" eval="True" />
-        <field name="perm_create" eval="True" />
-        <field name="perm_unlink" eval="True" />
+
+    <!-- Project record rule for managers - Can see all projects -->
+    <record id="project_manager_rule" model="ir.rule">
+        <field name="name">Project Manager Access Rule</field>
+        <field name="model_id" ref="model_vnfield_project" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_vnfield_manager'))]" />
     </record>
+
+    <!-- Approval record rule - Users can see approvals for tasks they're involved in -->
+    <record id="approval_user_rule" model="ir.rule">
+        <field name="name">Approval User Access Rule</field>
+        <field name="model_id" ref="model_vnfield_approval" />
+        <field name="domain_force">[
+            '|', '|', '|',
+            ('create_uid', '=', user.id),
+            ('approval_step_ids.step_user_id', '=', user.id),
+            ('approval_step_ids.user_ids', 'in', user.id),
+            ('requester_id', '=', user.id)
+            ]</field>
+        <field name="groups" eval="[(4, ref('group_vnfield_user'))]" />
+    </record>
+
+    <!-- Approval record rule for verifiers and managers - Can see all approvals -->
+    <record id="approval_verifier_rule" model="ir.rule">
+        <field name="name">Approval Verifier Access Rule</field>
+        <field name="model_id" ref="model_vnfield_approval" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups"
+            eval="[(4, ref('group_vnfield_verifier')), (4, ref('group_vnfield_manager'))]" />
+    </record>
+
 </odoo>

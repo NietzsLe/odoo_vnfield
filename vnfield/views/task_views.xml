@@ -1,159 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="task_kanban_action_view" model="ir.actions.act_window.view">
-        <field name="sequence" eval="1" />
-        <field name="view_mode">kanban</field>
-        <field name="act_window_id" ref="vnfield_task_action" />
-    </record>
-    <record model="ir.ui.view" id="task_tree_view">
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                📋 TASK VIEWS                             ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ─────────────── 📋 TASK LIST VIEW ─────────────── -->
+    <record id="task_tree_view" model="ir.ui.view">
         <field name="name">task.tree</field>
         <field name="model">vnfield.task</field>
         <field name="arch" type="xml">
-            <tree editable="top" open_form_view="True">
-                <field name="id" />
-                <field name="name" />
-                <field name="description" />
-                <field name="priority" />
-                <field name="status" />
-                <field name="deadline" />
-                <field name="assigner_id" />
-                <field name="assignee_id" />
-                <field name="verifier_id" />
-                <field name="project_id" />
+            <tree decoration-success="status=='completed'" decoration-info="status=='in-progress'"
+                decoration-warning="status=='on-hold'" decoration-danger="status=='canceled'">
+
+                <!-- 🏷️ Basic Information -->
+                <field name="name" string="Task Name" />
+                <field name="code" string="Code" />
+                <field name="assignee_id" string="Assignee" widget="many2one_avatar_user" />
+                <field name="assigner_id" string="Assigner" widget="many2one_avatar_user" />
+                <field name="verifier_id" string="Verifier" widget="many2one_avatar_user" />
+
+                <!-- ⚡ Status & Priority -->
+                <field name="status" string="Status" widget="badge"
+                    decoration-success="status=='completed'"
+                    decoration-info="status=='in-progress'"
+                    decoration-warning="status=='on-hold'"
+                    decoration-danger="status=='canceled'" />
+                <field name="priority" string="Priority" widget="priority" />
+
+                <!-- 📅 Timeline -->
+                <field name="start_date" string="Start Date" optional="show" />
+                <field name="deadline" string="Deadline" optional="show" />
+
+                <!-- 📊 Progress & Effort -->
+                <field name="progress" string="Progress" widget="progressbar" optional="show" />
+                <field name="estimated_hours" string="Est. Hours" optional="hide" />
+                <field name="actual_hours" string="Actual Hours" optional="hide" />
+
+                <!-- 🏢 Project & Approval -->
+                <field name="project_id" string="Project" optional="show" />
+                <field name="requires_approval" string="Needs Approval" optional="hide" />
             </tree>
         </field>
     </record>
-    <record model="ir.ui.view" id="task_form_view">
+
+    <!-- ─────────────── 📝 TASK FORM VIEW ─────────────── -->
+    <record id="task_form_view" model="ir.ui.view">
         <field name="name">task.form</field>
         <field name="model">vnfield.task</field>
         <field name="arch" type="xml">
             <form>
-                <div class="mb-2 d-flex flex-row gap-2">
-                    <button invisible="status!='not-started'" name="action_handle_click_for_start"
-                        type="object"
-                        string="Start"
-                        class="btn-primary" />
-                    <button invisible="status!='in-progress'" name="action_handle_click_for_resolve"
-                        type="object"
-                        string="Mark as Resolved"
-                        class="btn-primary" />
-                    <button
-                        invisible="status=='not-started' or status=='done' or status=='cancelled'"
-                        name="action_handle_click_for_cancelled"
-                        type="object"
-                        string="Cancel"
-                        class="btn-primary" />
-                    <button invisible="status!='resolved'" name="action_handle_click_for_done"
-                        type="object"
-                        string="Mark as Done"
-                        class="btn-primary" />
-                </div>
+                <header>
+                    <!-- 🎯 Action Buttons with Enhanced Workflow -->
+                    <!-- Start Task -->
+                    <button name="action_start_task" type="object"
+                        string="Start Task" class="btn-primary"
+                        invisible="status not in ['draft', 'planning']" />
+
+                    <!-- Move to Review -->
+                    <button name="action_move_to_review" type="object"
+                        string="Move to Review" class="btn-info"
+                        invisible="status != 'in-progress'" />
+
+                    <!-- Complete Task -->
+                    <button name="action_complete_task" type="object"
+                        string="Complete Task" class="btn-success"
+                        invisible="status not in ['in-progress', 'review']" />
+
+                    <!-- Assign Approval -->
+                    <button name="action_assign_approval" type="object"
+                        string="Assign Approval" class="btn-secondary"
+                        invisible="status != 'review' or approval_id" />
+
+                    <!-- Hold/Resume -->
+                    <button name="action_put_on_hold" type="object"
+                        string="Put On Hold" class="btn-warning"
+                        invisible="status not in ['in-progress', 'planning']" />
+
+                    <button name="action_resume_task" type="object"
+                        string="Resume Task" class="btn-primary"
+                        invisible="status != 'on-hold'" />
+
+                    <!-- Cancel -->
+                    <button name="action_cancel_task" type="object"
+                        string="Cancel Task" class="btn-danger"
+                        invisible="status in ['completed', 'canceled']" />
+
+                    <!-- Status Bar -->
+                    <field name="status" widget="statusbar"
+                        statusbar_visible="draft,planning,in-progress,on-hold,review,completed" />
+                </header>
+
                 <sheet>
+                    <!-- 🏷️ Task Title -->
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only" />
+                        <h1>
+                            <field name="name" placeholder="Task Name..." required="1" />
+                        </h1>
+                        <h3>
+                            <field name="code" readonly="1" placeholder="Auto-generated code..." />
+                        </h3>
+                    </div>
+
+                    <!-- 🎯 Key Metrics Cards -->
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="progress" widget="percentage" />
+                                    </span>
+                                    <span class="o_stat_text">Progress</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="actual_hours" /> / <field
+                                            name="estimated_hours" />
+                                    </span>
+                                    <span class="o_stat_text">Hours (Actual / Est.)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 📋 Main Information Groups -->
                     <group>
-                        <group>
-                            <field name="id" />
-                            <field name="name" />
-                            <field name="description" />
-                            <field name="task_type_id" />
-                            <field name="priority" />
-                            <field name="verifier_id" />
-                            <field name="is_issue_task" />
+                        <group string="📋 Task Information">
+                            <field name="priority" widget="priority" />
+                            <field name="project_id" options="{'no_create': True}" />
+                            <field name="parent_task_id" options="{'no_create': True}" />
                         </group>
-                        <group>
-                            <field name="assign_at" />
+
+                        <group string="📅 Timeline &amp; Deadlines">
+                            <field name="start_date" />
+                            <field name="completion_date" />
                             <field name="deadline" />
-                            <field name="start_at" />
-                            <field name="end_at" />
-                            <field name="status" />
-                            <field name="assignee_id" />
                         </group>
                     </group>
 
-                    <!-- <field name="related_issue_id" /> -->
+                    <!-- 👥 Task Roles -->
+                    <group string="👥 Task Roles &amp; Responsibilities">
+                        <group>
+                            <field name="assignee_id" options="{'no_create': True}"
+                                widget="many2one_avatar_user" />
+                            <field name="assignee_contractor_id" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="assigner_id" options="{'no_create': True}"
+                                widget="many2one_avatar_user" />
+                            <field name="assigner_contractor_id" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="verifier_id" options="{'no_create': True}"
+                                widget="many2one_avatar_user" />
+                            <field name="verifier_contractor_id" readonly="1" />
+                        </group>
+                    </group>
+
+                    <!-- ⏰ Effort Tracking -->
+                    <group string="⏰ Effort Tracking">
+                        <group>
+                            <field name="estimated_hours" />
+                            <field name="actual_hours" />
+                        </group>
+                        <group>
+                            <field name="progress" widget="percentage" />
+                        </group>
+                    </group>
+
+                    <!-- ✅ Approval Workflow -->
+                    <group string="✅ Approval Workflow">
+                        <group>
+                            <field name="requires_approval" />
+                            <field name="approval_id" readonly="1"
+                                invisible="not approval_id" />
+                        </group>
+                    </group>
+
+                    <!-- 📝 Task Description -->
+                    <group string="📝 Task Description">
+                        <field name="description" nolabel="1"
+                            placeholder="Detailed task description..." />
+                    </group>
+
+                    <!-- 📑 Tabbed Information -->
                     <notebook>
-                        <page string="Related Task">
-                            <sheet>
-                                <notebook>
-                                    <page string="Child Task">
-                                        <field name="child_task_ids" />
-                                    </page>
-                                    <page string="Dependent Task">
-                                        <field name="dependent_task_ids" />
-                                    </page>
-                                    <page string="Predecessor Task">
-                                        <field name="predecessor_task_ids" />
-                                    </page>
-                                    <page string="Parent Task">
-                                        <group>
-                                            <field name="parent_task_id" />
-                                        </group>
-                                    </page>
-                                </notebook>
-                            </sheet>
+                        <!-- 🏢 Related Contractors -->
+                        <page string="🏢 Contractors" name="contractors">
+                            <field name="related_contractor_ids" nolabel="1" readonly="1">
+                                <tree>
+                                    <field name="name" />
+                                    <field name="phone" />
+                                    <field name="email" />
+                                </tree>
+                            </field>
                         </page>
 
-                        <page string="Issue">
-
-                            <group>
-                                <field name="related_issue_id" />
-                                <field name="resolve_for_issue_id" />
-                            </group>
-                        </page>
-                        <page string="Other Information">
-                            <group>
-                                <group>
-                                    <field name="project_id" />
-                                    <field name="assigner_id" />
-                                </group>
-                                <group>
-                                    <field name="approval_to_verify_id" />
-                                </group>
-                            </group>
-                            <group>
-
-                                <field name="attachment_ids"
-                                    widget="many2many_binary" />
-                            </group>
+                        <!-- 📋 Subtasks -->
+                        <page string="📋 Subtasks" name="subtasks">
+                            <field name="child_task_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="name" />
+                                    <field name="assignee_id" widget="many2one_avatar_user" />
+                                    <field name="status" widget="badge" />
+                                    <field name="priority" widget="priority" />
+                                    <field name="progress" widget="progressbar" />
+                                    <field name="deadline" />
+                                </tree>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
+
+                <!-- 💬 Chatter -->
                 <div class="oe_chatter">
                     <field name="message_follower_ids" options="{'post_refresh':True}"
                         groups="base.group_user" />
+                    <field name="activity_ids" />
                     <field name="message_ids" />
                 </div>
             </form>
         </field>
     </record>
-    <record model="ir.ui.view" id="task_kanban_view">
+
+    <!-- ─────────────── 🎯 TASK KANBAN VIEW ─────────────── -->
+    <record id="task_kanban_view" model="ir.ui.view">
         <field name="name">task.kanban</field>
         <field name="model">vnfield.task</field>
         <field name="arch" type="xml">
-            <kanban>
+            <kanban default_group_by="status" class="o_kanban_task" quick_create="false">
+
+                <!-- Kanban Progress Colors -->
+                <field name="status" />
+                <field name="priority" />
+                <field name="assignee_id" />
+                <field name="verifier_id" />
+                <field name="progress" />
+                <field name="deadline" />
+                <field name="project_id" />
+                <field name="requires_approval" />
+
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="oe_kanban_content  oe_kanban_global_click">
-                            <div class="d-flex flex-row gap-1">
-                                <div class="">
-                                    <field name="id" />
+                        <div class="oe_kanban_card oe_kanban_global_click">
+
+                            <!-- 🏷️ Card Header -->
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        <strong>
+                                            <field name="name" />
+                                        </strong>
+                                    </div>
+                                    <div class="text-muted" t-if="record.project_id.raw_value">
+                                        <field name="project_id" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <field name="name" />
+
+                                <!-- 🎯 Priority Badge -->
+                                <div class="o_kanban_card_manage_pane">
+                                    <field name="priority" widget="priority" />
                                 </div>
                             </div>
-                            <div>
-                                <field name="status" />
+
+                            <!-- 📊 Progress Bar -->
+                            <div class="o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-8">
+                                        <strong>Progress:</strong>
+                                        <field name="progress" widget="progressbar" />
+                                    </div>
+                                    <div class="col-4 text-right">
+                                        <span class="badge badge-pill badge-warning"
+                                            t-if="record.requires_approval.raw_value">
+                                            Requires Approval
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- 👥 Task Roles -->
+                                <div class="row mt8">
+                                    <div class="col-12">
+                                        <strong>Assignee:</strong>
+                                        <field name="assignee_id" widget="many2one_avatar_user" />
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <strong>Verifier:</strong>
+                                        <field name="verifier_id" widget="many2one_avatar_user" />
+                                    </div>
+                                </div>
+
+                                <!-- 📅 Timeline -->
+                                <div class="row mt8" t-if="record.deadline.raw_value">
+                                    <div class="col-12">
+                                        <i class="fa fa-calendar text-muted" />
+                                        <strong>Deadline:</strong>
+                                        <field name="deadline" />
+                                        <t
+                                            t-if="record.deadline.raw_value &lt; (new Date()).toISOString() and record.status.raw_value != 'completed'">
+                                            <span class="badge badge-danger ml8">Overdue</span>
+                                        </t>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <field name="priority" />
-                            </div>
-                            <div>
-                                <field name="deadline" />
-                            </div>
-                            <div>
-                                <field name="assigner_id" />
-                            </div>
-                            <div>
-                                <field name="assignee_id" />
+
+                            <!-- 🎨 Card Footer with Enhanced Actions -->
+                            <div class="o_kanban_card_manage_pane">
+                                <div class="o_kanban_card_manage_section o_kanban_manage_reports">
+                                    <div>
+                                        <!-- Draft Status -->
+                                        <a name="action_start_task" type="object"
+                                            t-if="record.status.raw_value == 'draft'"
+                                            class="btn btn-primary btn-sm">
+                                            <i class="fa fa-play" /> Start </a>
+
+                                        <!-- In Progress Status -->
+                                        <a name="action_move_to_review" type="object"
+                                            t-if="record.status.raw_value == 'in-progress'"
+                                            class="btn btn-info btn-sm">
+                                            <i class="fa fa-search" /> Review </a>
+
+                                        <!-- Review Status -->
+                                        <a name="action_complete_task" type="object"
+                                            t-if="record.status.raw_value == 'review'"
+                                            class="btn btn-success btn-sm">
+                                            <i class="fa fa-check" /> Complete </a>
+
+                                        <!-- Assign Approval in Review -->
+                                        <a name="action_assign_approval" type="object"
+                                            t-if="record.status.raw_value == 'review' and not record.approval_id.raw_value"
+                                            class="btn btn-secondary btn-sm ml-1">
+                                            <i class="fa fa-clipboard" /> Approval </a>
+
+                                        <!-- On Hold Status -->
+                                        <a name="action_resume_task" type="object"
+                                            t-if="record.status.raw_value == 'on-hold'"
+                                            class="btn btn-primary btn-sm">
+                                            <i class="fa fa-play" /> Resume </a>
+
+                                        <!-- Hold Button for Active Tasks -->
+                                        <a name="action_put_on_hold" type="object"
+                                            t-if="record.status.raw_value in ['in-progress', 'planning']"
+                                            class="btn btn-warning btn-sm ml-1">
+                                            <i class="fa fa-pause" /> Hold </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </t>
@@ -161,4 +359,87 @@
             </kanban>
         </field>
     </record>
+
+    <!-- ─────────────── 🔍 TASK SEARCH VIEW ─────────────── -->
+    <record id="task_search_view" model="ir.ui.view">
+        <field name="name">task.search</field>
+        <field name="model">vnfield.task</field>
+        <field name="arch" type="xml">
+            <search>
+                <!-- 🔍 Search Fields -->
+                <field name="name" string="Task Name" />
+                <field name="assignee_id" string="Assignee" />
+                <field name="assigner_id" string="Assigner" />
+                <field name="verifier_id" string="Verifier" />
+                <field name="project_id" string="Project" />
+
+                <!-- 🎯 Quick Filters -->
+                <separator />
+                <filter string="My Tasks (Assignee)" name="my_tasks"
+                    domain="[('assignee_id', '=', uid)]" />
+                <filter string="I Assigned" name="i_assigned"
+                    domain="[('assigner_id', '=', uid)]" />
+                <filter string="I Verify" name="i_verify"
+                    domain="[('verifier_id', '=', uid)]" />
+                <filter string="In Progress" name="in_progress"
+                    domain="[('status', '=', 'in-progress')]" />
+                <filter string="Under Review" name="under_review"
+                    domain="[('status', '=', 'review')]" />
+                <filter string="Completed" name="completed"
+                    domain="[('status', '=', 'completed')]" />
+                <filter string="Overdue" name="overdue"
+                    domain="[('deadline', '&lt;', context_today().strftime('%Y-%m-%d')), ('status', 'not in', ['completed', 'canceled'])]" />
+                <filter string="High Priority" name="high_priority"
+                    domain="[('priority', 'in', ['2', '3'])]" />
+                <filter string="Requires Approval" name="requires_approval"
+                    domain="[('requires_approval', '=', True)]" />
+
+                <!-- 📊 Group By -->
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}" />
+                    <filter string="Assignee" name="group_assignee"
+                        context="{'group_by': 'assignee_id'}" />
+                    <filter string="Verifier" name="group_verifier"
+                        context="{'group_by': 'verifier_id'}" />
+                    <filter string="Project" name="group_project"
+                        context="{'group_by': 'project_id'}" />
+                    <filter string="Priority" name="group_priority"
+                        context="{'group_by': 'priority'}" />
+                    <filter string="Start Date" name="group_start_date"
+                        context="{'group_by': 'start_date'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ─────────────── 📊 TASK ACTIONS ─────────────── -->
+    <record id="vnfield_task_action" model="ir.actions.act_window">
+        <field name="name">Task Management</field>
+        <field name="res_model">vnfield.task</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_id" ref="task_kanban_view" />
+        <field name="search_view_id" ref="task_search_view" />
+        <field name="context">{
+            'search_default_my_tasks': 1,
+            }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first task!
+            </p>
+            <p>
+                Start managing tasks with assignees, verifiers, and approvals.
+                Track progress, manage deadlines, and collaborate effectively.
+            </p>
+        </field>
+    </record>
+
+    <!-- ─────────────── 📋 MENU ITEMS ─────────────── -->
+    <menuitem
+        id="menu_task_tasks"
+        name="Tasks"
+        parent="menu_project_root"
+        action="vnfield_task_action"
+        sequence="20" />
+
 </odoo>

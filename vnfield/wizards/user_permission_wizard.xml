@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═            🔐 USER PERMISSION WIZARD VIEWS               ═ -->
+    <!-- ═           Permission Assignment Wizard Interface         ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- 🔐 User Permission Assignment Wizard Form -->
+    <record id="view_user_permission_wizard_form" model="ir.ui.view">
+        <field name="name">vnfield.user.permission.wizard.form</field>
+        <field name="model">vnfield.user.permission.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Assign User Permissions">
+                <group>
+                    <group string="👥 User Information">
+                        <field name="user_id" options="{'no_create': True}" />
+                    </group>
+
+                    <group string="🔐 Permission Settings">
+                        <field name="permission_level" widget="radio" />
+                    </group>
+                </group>
+
+                <group string="📋 Additional Settings">
+                    <field name="additional_groups" widget="many2many_tags" />
+                    <field name="reason" placeholder="Enter reason for permission assignment..." />
+                </group>
+
+                <footer>
+                    <button name="action_assign_permissions"
+                        string="🔐 Assign Permissions"
+                        type="object"
+                        class="btn-primary" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- 🎯 User Permission Assignment Action -->
+    <record id="action_user_permission_wizard" model="ir.actions.act_window">
+        <field name="name">Assign User Permissions</field>
+        <field name="res_model">vnfield.user.permission.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_user_id': active_id if context.get('active_model') == 'res.users' else False,
+            }</field>
+    </record>
+
+</odoo>

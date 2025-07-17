@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═            👥 USER-CONTRACTOR DASHBOARD VIEWS            ═ -->
+    <!-- ═         Unified Interface với Contractor Sidebar         ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ┌─────────────────────────────────────────────────────────┐ -->
+    <!-- │             🎨 MAIN DASHBOARD TEMPLATE                  │ -->
+    <!-- └─────────────────────────────────────────────────────────┘ -->
+
+    <!-- 🎨 User-Contractor Dashboard Template -->
+    <template id="user_contractor_dashboard_template" name="User-Contractor Dashboard">
+        <t t-call="web.layout">
+            <t t-set="title">👥 User &amp; Contractor Dashboard</t>
+            <t t-set="head">
+                <!-- Custom CSS cho Dashboard -->
+                <style>
+                    /* ═════════════════════════════════════════════════════════ */
+                    /* ═ 🎨 DASHBOARD CUSTOM STYLES ═ */
+                    /* ═════════════════════════════════════════════════════════ */
+
+                    /* 📋 Contractor Sidebar Styling */
+                    .contractor-item {
+                    border: none !important;
+                    border-radius: 0;
+                    transition: all 0.2s ease;
+                    }
+
+                    .contractor-item:hover {
+                    background-color: #f8f9fa;
+                    border-left: 4px solid #007bff;
+                    }
+
+                    .contractor-item.active {
+                    background-color: #007bff;
+                    color: white;
+                    border-left: 4px solid #0056b3;
+                    }
+
+                    .contractor-item.active .text-muted {
+                    color: rgba(255, 255, 255, 0.8) !important;
+                    }
+
+                    .contractor-item.active .badge-warning {
+                    background-color: #ffc107;
+                    color: #212529;
+                    }
+
+                    .contractor-item.active .badge-success {
+                    background-color: #28a745;
+                    color: white;
+                    }
+
+                    /* 👥 User Cards Styling */
+                    .user-card {
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    border: 1px solid #e9ecef;
+                    }
+
+                    .user-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .user-avatar {
+                    min-width: 40px;
+                    }
+
+                    .user-info h6 {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    }
+
+                    .user-details {
+                    min-height: 60px;
+                    }
+
+                    .user-actions {
+                    border-top: 1px solid #f8f9fa;
+                    padding-top: 10px;
+                    }
+
+                    /* 📊 Statistics Cards */
+                    .bg-light {
+                    background-color: #f8f9fa !important;
+                    }
+
+                    /* 🔄 Loading Animation */
+                    .spinner-border {
+                    width: 3rem;
+                    height: 3rem;
+                    }
+
+                    /* 📱 Responsive Design */
+                    @media (max-width: 768px) {
+                    .contractor-sidebar {
+                    margin-bottom: 20px;
+                    }
+
+                    .user-card {
+                    margin-bottom: 15px;
+                    }
+
+                    .btn-group {
+                    flex-direction: column;
+                    }
+
+                    .btn-group .btn {
+                    margin-bottom: 5px;
+                    border-radius: 4px !important;
+                    }
+                    }
+
+                    /* 🎯 Badge Enhancements */
+                    .badge-sm {
+                    font-size: 0.75em;
+                    padding: 0.25em 0.5em;
+                    }
+
+                    /* 📋 List Group Enhancements */
+                    .list-group-flush .list-group-item:first-child {
+                    border-top: none;
+                    }
+
+                    .list-group-flush .list-group-item:last-child {
+                    border-bottom: none;
+                    }
+
+                    /* 🎨 Header Styling */
+                    .h2 {
+                    font-weight: 600;
+                    color: #495057;
+                    }
+
+                    /* 📊 Card Header Styling */
+                    .card-header.bg-primary {
+                    background-color: #007bff !important;
+                    border-bottom: 1px solid #0056b3;
+                    }
+
+                    .card-header h6 {
+                    font-weight: 600;
+                    }
+                </style>
+            </t>
+
+            <div class="container-fluid mt-3">
+                <!-- 📊 Dashboard Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="h2 mb-0">
+                                    <i class="fa fa-users text-primary"></i> 👥 User &amp;
+                                    Contractor Management </h1>
+                                <p class="text-muted mb-0">
+                                    Unified interface for managing users and contractors
+                                </p>
+                            </div>
+
+                            <!-- 📈 Summary Statistics -->
+                            <div class="d-flex">
+                                <div class="card border-0 bg-light mr-3">
+                                    <div class="card-body text-center py-2 px-3">
+                                        <h5 class="card-title text-primary mb-0">
+                                            <t t-esc="contractor_count" />
+                                        </h5>
+                                        <small class="text-muted">Contractors</small>
+                                    </div>
+                                </div>
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body text-center py-2 px-3">
+                                        <h5 class="card-title text-success mb-0">
+                                            <t t-esc="user_count" />
+                                        </h5>
+                                        <small class="text-muted">Users</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- ┌───────────────────────────────────────────────────┐ -->
+                    <!-- │              📋 CONTRACTOR SIDEBAR               │ -->
+                    <!-- └───────────────────────────────────────────────────┘ -->
+
+                    <div class="col-md-3 col-lg-2">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="card-title mb-0">
+                                    <i class="fa fa-building"></i> 🏢 Contractors </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="contractor-sidebar" class="list-group list-group-flush">
+                                    <t t-foreach="contractors" t-as="contractor">
+                                        <a href="#"
+                                            class="list-group-item list-group-item-action contractor-item"
+                                            t-attf-class="#{current_contractor and contractor.id == current_contractor.id and 'active' or ''}"
+                                            t-att-data-contractor-id="contractor.id"
+                                            t-att-data-contractor-name="contractor.name">
+
+                                            <div
+                                                class="d-flex justify-content-between align-items-center">
+                                                <div class="contractor-info">
+                                                    <h6 class="mb-1">
+                                                        <i class="fa fa-building text-muted mr-1"></i>
+                                                        <t t-esc="contractor.name" />
+                                                    </h6>
+                                                    <small class="text-muted"> 👥 <t
+                                                            t-esc="contractor.user_count" /> users </small>
+                                                </div>
+
+                                                <!-- Status Badges -->
+                                                <div class="contractor-badges">
+                                                    <span t-if="contractor.has_leader"
+                                                        class="badge badge-warning badge-sm">
+                                                        👑
+                                                    </span>
+                                                    <span t-if="contractor.active"
+                                                        class="badge badge-success badge-sm">
+                                                        ✅
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </t>
+
+                                    <!-- Empty State cho Contractors -->
+                                    <div t-if="not contractors" class="text-center p-4">
+                                        <i class="fa fa-building fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No contractors found</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ┌───────────────────────────────────────────────────┐ -->
+                    <!-- │               👥 MAIN USER CONTENT               │ -->
+                    <!-- └───────────────────────────────────────────────────┘ -->
+
+                    <div class="col-md-9 col-lg-10">
+                        <div class="card h-100">
+                            <!-- User List Header -->
+                            <div
+                                class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">
+                                        <i class="fa fa-users"></i> 👥 Users <span
+                                            t-if="current_contractor" class="text-muted"> - <t
+                                                t-esc="current_contractor.name" />
+                                        </span>
+                                    </h6>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="btn-group" role="group">
+                                    <a
+                                        href="/web#action=vnfield.action_users_management&amp;view_type=form&amp;model=res.users"
+                                        class="btn btn-sm btn-outline-primary"
+                                        target="_blank">
+                                        <i class="fa fa-plus"></i> Add User </a>
+                                    <a
+                                        href="/web#action=vnfield.action_contractors_management&amp;view_type=form&amp;model=vnfield.contractor"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        target="_blank">
+                                        <i class="fa fa-building"></i> Manage Contractors </a>
+                                </div>
+                            </div>
+
+                            <!-- User List Content -->
+                            <div class="card-body" id="user-content">
+                                <!-- Loading State -->
+                                <div id="loading-state" class="text-center py-5"
+                                    style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">Loading users...</p>
+                                </div>
+
+                                <!-- User Cards Container -->
+                                <div id="users-container" class="row">
+                                    <t t-foreach="users" t-as="user">
+                                        <div class="col-lg-6 col-xl-4 mb-3">
+                                            <div class="card user-card h-100">
+                                                <div class="card-body">
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <div class="user-avatar mr-3">
+                                                            <i
+                                                                class="fa fa-user-circle fa-2x text-primary"></i>
+                                                        </div>
+                                                        <div class="user-info flex-grow-1">
+                                                            <h6 class="card-title mb-1">
+                                                                <t t-esc="user.name" />
+                                                                <span
+                                                                    t-if="user.is_leader_of_contractor"
+                                                                    class="badge badge-warning badge-sm ml-1">
+                                                                    👑 Leader
+                                                                </span>
+                                                            </h6>
+                                                            <p class="card-text text-muted mb-0">
+                                                                <t t-esc="user.email" />
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- User Details -->
+                                                    <div class="user-details">
+                                                        <small class="text-muted d-block"
+                                                            t-if="user.phone"> 📞 <t
+                                                                t-esc="user.phone" />
+                                                        </small>
+                                                        <small class="text-muted d-block"
+                                                            t-if="user.specialization"> 🎯 <t
+                                                                t-esc="user.specialization" />
+                                                        </small>
+                                                        <small class="text-muted d-block"
+                                                            t-if="user.login_date"> 🕐 Last login: <t
+                                                                t-esc="user.login_date" />
+                                                        </small>
+                                                    </div>
+
+                                                    <!-- User Actions -->
+                                                    <div class="user-actions mt-3">
+                                                        <a
+                                                            t-attf-href="/web#id=#{user.id}&amp;action=vnfield.action_users_management&amp;view_type=form&amp;model=res.users"
+                                                            class="btn btn-sm btn-outline-primary"
+                                                            target="_blank">
+                                                            <i class="fa fa-edit"></i> Edit </a>
+
+                                                        <span t-if="user.active"
+                                                            class="badge badge-success ml-2">
+                                                            Active
+                                                        </span>
+                                                        <span t-else=""
+                                                            class="badge badge-secondary ml-2">
+                                                            Inactive
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <!-- Empty State cho Users -->
+                                <div id="empty-users-state" class="text-center py-5"
+                                    t-attf-style="display: #{users and 'none' or 'block'};">
+                                    <i class="fa fa-users fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No users found</h5>
+                                    <p class="text-muted mb-3">
+                                        <span t-if="current_contractor"> No users assigned to <strong>
+                                                <t t-esc="current_contractor.name" />
+                                            </strong>
+                                        </span>
+                                        <span t-else="">
+                                            Select a contractor to view users
+                                        </span>
+                                    </p>
+                                    <a
+                                        href="/web#action=vnfield.action_users_management&amp;view_type=form&amp;model=res.users"
+                                        class="btn btn-primary"
+                                        target="_blank">
+                                        <i class="fa fa-plus"></i> Add First User </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JavaScript cho Dashboard Functionality -->
+            <script type="text/javascript"> //
+                ┌─────────────────────────────────────────────────────┐ // │ 🎮 DASHBOARD JAVASCRIPT
+                │ // └─────────────────────────────────────────────────────┘
+                document.addEventListener('DOMContentLoaded', function() { // 🎯 Initialize
+                Dashboard initializeUserContractorDashboard(); }); function
+                initializeUserContractorDashboard() { // 📋 Contractor selection handlers const
+                contractorItems = document.querySelectorAll('.contractor-item');
+                contractorItems.forEach(function(item) { item.addEventListener('click', function(e)
+                { e.preventDefault(); // 🔄 Remove active class từ all items
+                contractorItems.forEach(function(otherItem) { otherItem.classList.remove('active');
+                }); // ✅ Add active class to clicked item this.classList.add('active'); // 📊 Get
+                contractor data const contractorId = this.getAttribute('data-contractor-id'); const
+                contractorName = this.getAttribute('data-contractor-name'); // 🔄 Load users for
+                selected contractor loadUsersByContractor(contractorId, contractorName); }); }); }
+                function loadUsersByContractor(contractorId, contractorName) { // 🔄 Show loading
+                state showLoadingState(); // 📡 AJAX call to fetch users
+                fetch('/user-contractor/api/users/' + contractorId, { method: 'POST', headers: {
+                'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body:
+                JSON.stringify({ jsonrpc: '2.0', method: 'call', params: {} }) }) .then(response =>
+                response.json()) .then(data => { if (data.result &amp;&amp; data.result.success) {
+                // ✅ Success - update user list updateUsersList(data.result.data, contractorName); }
+                else { // ❌ Error handling showErrorState(data.result ? data.result.error : 'Unknown
+                error'); } }) .catch(error => { console.error('Error loading users:', error);
+                showErrorState('Failed to load users'); }) .finally(() => { hideLoadingState(); });
+                } function updateUsersList(data, contractorName) { const usersContainer =
+                document.getElementById('users-container'); const emptyState =
+                document.getElementById('empty-users-state'); const userContent =
+                document.getElementById('user-content'); // 🧹 Clear existing content
+                usersContainer.innerHTML = ''; if (data.users &amp;&amp; data.users.length > 0) { //
+                👥 Render user cards data.users.forEach(function(user) { const userCard =
+                createUserCard(user); usersContainer.appendChild(userCard); }); // 👁️ Show users,
+                hide empty state usersContainer.style.display = 'flex'; emptyState.style.display =
+                'none'; // 📊 Update header title updateHeaderTitle(contractorName,
+                data.user_count); } else { // 📭 Show empty state usersContainer.style.display =
+                'none'; emptyState.style.display = 'block'; // 📊 Update empty state message
+                updateEmptyStateMessage(contractorName); } } function createUserCard(user) { const
+                col = document.createElement('div'); col.className = 'col-lg-6 col-xl-4 mb-3'; const
+                leaderBadge = user.is_leader_of_contractor ? '<span
+                    class="badge badge-warning badge-sm ml-1">👑 Leader</span>' : ''; const phone =
+                user.phone ? `<small class="text-muted d-block">📞 ${user.phone}</small>` : '';
+                const specialization = user.specialization ? `<small class="text-muted d-block">🎯
+                ${user.specialization}</small>` : ''; const loginDate = user.login_date ? `<small
+                    class="text-muted d-block">🕐 Last login: ${user.login_date}</small>` : '';
+                const statusBadge = user.active ? '<span class="badge badge-success ml-2">Active</span>'
+                : '<span class="badge badge-secondary ml-2">Inactive</span>'; col.innerHTML = ` <div
+                    class="card user-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="user-avatar mr-3">
+                                <i class="fa fa-user-circle fa-2x text-primary"></i>
+                            </div>
+                            <div class="user-info flex-grow-1">
+                                <h6 class="card-title mb-1">
+                                    ${user.name}
+                                    ${leaderBadge}
+                                </h6>
+                                <p class="card-text text-muted mb-0">
+                                    ${user.email}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="user-details">
+                            ${phone}
+                            ${specialization}
+                            ${loginDate}
+                        </div>
+
+                        <div class="user-actions mt-3">
+                            <a
+                                href="/web#id=${user.id}&amp;action=vnfield.action_users_management&amp;view_type=form&amp;model=res.users"
+                                class="btn btn-sm btn-outline-primary"
+                                target="_blank">
+                                <i class="fa fa-edit"></i> Edit </a> ${statusBadge} </div>
+                    </div>
+                </div>
+                `; return col; } function updateHeaderTitle(contractorName, userCount) { const
+                headerTitle = document.querySelector('.card-header h6'); if (headerTitle) {
+                headerTitle.innerHTML = ` <i class="fa fa-users"></i> 👥 Users - ${contractorName} <small
+                    class="text-muted">(${userCount} users)</small> `; } } function
+                updateEmptyStateMessage(contractorName) { const emptyState =
+                document.getElementById('empty-users-state'); const messageP =
+                emptyState.querySelector('p'); if (messageP) { messageP.innerHTML = `No users
+                assigned to <strong>${contractorName}</strong>`; } } function showLoadingState() {
+                document.getElementById('loading-state').style.display = 'block';
+                document.getElementById('users-container').style.display = 'none';
+                document.getElementById('empty-users-state').style.display = 'none'; } function
+                hideLoadingState() { document.getElementById('loading-state').style.display =
+                'none'; } function showErrorState(errorMessage) { const usersContainer =
+                document.getElementById('users-container'); usersContainer.innerHTML = ` <div
+                    class="col-12">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fa fa-exclamation-triangle"></i>
+                                <strong>Error:</strong>
+                ${errorMessage} </div>
+                </div> `; usersContainer.style.display =
+                'block'; } </script>
+        </t>
+    </template>
+
+    <!-- ┌─────────────────────────────────────────────────────────┐ -->
+    <!-- │                  🎨 CUSTOM CSS ASSETS                  │ -->
+    <!-- └─────────────────────────────────────────────────────────┘ -->
+
+    <!-- ┌─────────────────────────────────────────────────────────┐ -->
+    <!-- │               🎯 DASHBOARD ACTION                       │ -->
+    <!-- └─────────────────────────────────────────────────────────┘ -->
+
+    <!-- 🎯 User-Contractor Dashboard Action -->
+    <record id="action_user_contractor_dashboard" model="ir.actions.act_url">
+        <field name="name">👥 User &amp; Contractor Dashboard</field>
+        <field name="url">/user-contractor/dashboard</field>
+        <field name="target">self</field>
+    </record>
+
+    <!-- ┌─────────────────────────────────────────────────────────┐ -->
+    <!-- │               📋 MENU INTEGRATION                      │ -->
+    <!-- └─────────────────────────────────────────────────────────┘ -->
+
+    <!-- 🎯 Dashboard Menu Item -->
+    <menuitem id="menu_user_contractor_dashboard"
+        name="📊 Unified Dashboard"
+        parent="menu_user_contractor_main"
+        action="action_user_contractor_dashboard"
+        sequence="5" />
+
+</odoo>

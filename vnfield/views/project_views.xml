@@ -1,90 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="project_kanban_action_view" model="ir.actions.act_window.view">
-        <field name="sequence" eval="1" />
-        <field name="view_mode">kanban</field>
-        <field name="act_window_id" ref="vnfield_project_action" />
-    </record>
-    <record model="ir.ui.view" id="project_tree_view">
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═                🏗️ PROJECT VIEWS                          ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ─────────────── 📋 PROJECT LIST VIEW ─────────────── -->
+    <record id="project_tree_view" model="ir.ui.view">
         <field name="name">project.tree</field>
         <field name="model">vnfield.project</field>
         <field name="arch" type="xml">
-            <tree editable="top">
-                <field name="id" />
-                <field name="name" />
-                <field name="description" />
-                <field name="start_at" />
-                <field name="end_at" />
-                <field name="status" />
-                <field name="manager_id" />
+            <tree decoration-success="status=='completed'" decoration-info="status=='in-progress'"
+                decoration-warning="status=='on-hold'" decoration-danger="status=='canceled'">
+
+                <!-- 🏷️ Basic Information -->
+                <field name="name" string="Project Name" />
+                <field name="code" string="Code" optional="show" />
+                <field name="manager_id" string="Manager" widget="many2one_avatar_user" />
+                <field name="project_owner_id" string="Owner" />
+
+                <!-- ⚡ Status & Priority -->
+                <field name="status" string="Status" widget="badge"
+                    decoration-success="status=='completed'"
+                    decoration-info="status=='in-progress'"
+                    decoration-warning="status=='on-hold'"
+                    decoration-danger="status=='canceled'" />
+                <field name="priority" string="Priority" widget="priority" />
+
+                <!-- 📅 Timeline -->
+                <field name="start_date" string="Start Date" optional="show" />
+                <field name="deadline" string="Deadline" optional="show" />
+
+                <!-- 📊 Progress & Metrics -->
+                <field name="progress" string="Progress" widget="progressbar" optional="show" />
+                <field name="task_count" string="Tasks" optional="show" />
+                <field name="member_count" string="Members" optional="hide" />
+
+                <!-- 💰 Financials -->
+                <field name="budget" string="Budget" optional="hide" />
+                <field name="currency_id" invisible="1" />
             </tree>
         </field>
     </record>
-    <record model="ir.ui.view" id="project_form_view">
+
+    <!-- ─────────────── 📝 PROJECT FORM VIEW ─────────────── -->
+    <record id="project_form_view" model="ir.ui.view">
         <field name="name">project.form</field>
         <field name="model">vnfield.project</field>
         <field name="arch" type="xml">
             <form>
-                <sheet>
-                    <group>
-                        <group>
-                            <field name="id" />
-                            <field name="name" />
-                            <field name="description" />
+                <header>
+                    <!-- 🎯 Action Buttons with Enhanced Workflow -->
+                    <!-- Planning Phase -->
+                    <button name="action_move_to_planning" type="object"
+                        string="Start Planning" class="btn-info"
+                        invisible="status != 'draft'" />
 
+                    <!-- Execution Phase -->
+                    <button name="action_start_project" type="object"
+                        string="Start Project" class="btn-primary"
+                        invisible="status not in ['draft', 'planning']" />
+
+                    <!-- Review Phase -->
+                    <button name="action_move_to_review" type="object"
+                        string="Move to Review" class="btn-info"
+                        invisible="status != 'in-progress'" />
+
+                    <!-- Completion -->
+                    <button name="action_complete_project" type="object"
+                        string="Complete Project" class="btn-success"
+                        invisible="status not in ['in-progress', 'review']" />
+
+                    <!-- Hold/Resume -->
+                    <button name="action_put_on_hold" type="object"
+                        string="Put On Hold" class="btn-warning"
+                        invisible="status not in ['in-progress', 'planning']" />
+
+                    <button name="action_resume_project" type="object"
+                        string="Resume Project" class="btn-primary"
+                        invisible="status != 'on-hold'" />
+
+                    <!-- Cancel -->
+                    <button name="action_cancel_project" type="object"
+                        string="Cancel Project" class="btn-danger"
+                        invisible="status in ['completed', 'canceled']" />
+
+                    <!-- Status Bar with All States -->
+                    <field name="status" widget="statusbar"
+                        statusbar_visible="draft,planning,in-progress,on-hold,review,completed" />
+                </header>
+
+                <sheet>
+                    <!-- 🏷️ Project Title -->
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only" />
+                        <h1>
+                            <field name="name" placeholder="Project Name..." required="1" />
+                        </h1>
+                        <h3>
+                            <field name="code" placeholder="Project Code (Optional)" />
+                        </h3>
+                    </div>
+
+                    <!-- 🎯 Key Metrics Cards -->
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="progress" widget="percentage" />
+                                    </span>
+                                    <span class="o_stat_text">Progress</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="task_count" />
+                                    </span>
+                                    <span class="o_stat_text">Tasks</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 📋 Main Information Groups -->
+                    <group>
+                        <group string="📋 Project Information">
+                            <field name="priority" widget="priority" />
+                            <field name="manager_id" options="{'no_create': True}"
+                                widget="many2one_avatar_user" />
+                            <field name="project_owner_id" options="{'no_create': True}" />
                         </group>
-                        <group>
-                            <field name="status" />
-                            <field name="manager_id" />
+
+                        <group string="📅 Timeline &amp; Deadlines">
+                            <field name="start_date" />
+                            <field name="end_date" />
+                            <field name="deadline" />
                         </group>
                     </group>
-                    <notebook>
-                        <page string="Other Informations">
-                            <group>
-                                <group>
-                                    <field name="start_at" />
 
-                                </group>
-                                <group>
-                                    <field name="end_at" />
-                                </group>
-                            </group>
+                    <!-- 💰 Financial Information -->
+                    <group string="💰 Financial Information">
+                        <group>
+                            <field name="currency_id" invisible="1" />
+                            <field name="budget" />
+                            <field name="actual_cost" />
+                        </group>
+                    </group>
+
+                    <!-- 📝 Project Description -->
+                    <group string="📝 Project Description">
+                        <field name="description" nolabel="1"
+                            placeholder="Detailed project description..." />
+                    </group>
+
+                    <!-- 📑 Tabbed Information -->
+                    <notebook>
+                        <!-- 👥 Team Management -->
+                        <page string="👥 Team" name="team">
                             <group>
-                                <field name="member_ids" />
+                                <group string="👥 Project Members">
+                                    <field name="member_ids" nolabel="1" widget="many2many_tags"
+                                        options="{'color_field': 'color', 'no_create': True}" />
+                                    <field name="member_count" readonly="1" />
+                                </group>
+
+                                <group string="🏢 Contractors">
+                                    <field name="subcontractor_ids" nolabel="1"
+                                        widget="many2many_tags"
+                                        options="{'no_create': True}" />
+                                </group>
                             </group>
                         </page>
 
+                        <!-- 📋 Tasks -->
+                        <page string="📋 Tasks" name="tasks">
+                            <field name="task_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="name" />
+                                    <field name="assignee_id" widget="many2one_avatar_user" />
+                                    <field name="status" widget="badge" />
+                                    <field name="priority" widget="priority" />
+                                    <field name="progress" widget="progressbar" />
+                                    <field name="deadline" />
+                                </tree>
+                            </field>
+                        </page>
+
+                        <!-- ✅ Approvals -->
+                        <page string="✅ Approvals" name="approvals">
+                            <field name="approval_ids" nolabel="1">
+                                <tree>
+                                    <field name="name" />
+                                    <field name="status" />
+                                    <field name="create_date" />
+                                </tree>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
+
+                <!-- 💬 Chatter -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" options="{'post_refresh':True}"
+                        groups="base.group_user" />
+                    <field name="activity_ids" />
+                    <field name="message_ids" />
+                </div>
             </form>
         </field>
     </record>
-    <record model="ir.ui.view" id="project_kanban_view">
+
+    <!-- ─────────────── 🎯 PROJECT KANBAN VIEW ─────────────── -->
+    <record id="project_kanban_view" model="ir.ui.view">
         <field name="name">project.kanban</field>
         <field name="model">vnfield.project</field>
         <field name="arch" type="xml">
-            <kanban>
+            <kanban default_group_by="status" class="o_kanban_project" quick_create="false">
+
+                <!-- Kanban Progress Colors -->
+                <field name="status" />
+                <field name="priority" />
+                <field name="manager_id" />
+                <field name="project_owner_id" />
+                <field name="progress" />
+                <field name="task_count" />
+                <field name="member_count" />
+                <field name="deadline" />
+                <field name="currency_id" />
+                <field name="budget" />
+
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="oe_kanban_content oe_kanban_global_click">
-                            <div class="d-flex flex-row gap-1">
-                                <div class="">
-                                    <field name="id" />
+                        <div class="oe_kanban_card oe_kanban_global_click">
+
+                            <!-- 🏷️ Card Header -->
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        <strong>
+                                            <field name="name" />
+                                        </strong>
+                                    </div>
+                                    <div class="text-muted">
+                                        <field name="code" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <field name="name" />
+
+                                <!-- 🎯 Priority Badge -->
+                                <div class="o_kanban_card_manage_pane">
+                                    <field name="priority" widget="priority" />
                                 </div>
                             </div>
-                            <div>
-                                <field name="status" />
+
+                            <!-- 📊 Progress Bar -->
+                            <div class="o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-8">
+                                        <strong>Progress:</strong>
+                                        <field name="progress" widget="progressbar" />
+                                    </div>
+                                    <div class="col-4 text-right">
+                                        <span class="badge badge-pill badge-info">
+                                            <field name="task_count" /> Tasks </span>
+                                    </div>
+                                </div>
+
+                                <!-- 👥 Team Information -->
+                                <div class="row mt8">
+                                    <div class="col-12">
+                                        <strong>Manager:</strong>
+                                        <field name="manager_id" widget="many2one_avatar_user" />
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <strong>Owner:</strong>
+                                        <field name="project_owner_id" />
+                                    </div>
+                                </div>
+
+                                <!-- 📅 Timeline -->
+                                <div class="row mt8" t-if="record.deadline.raw_value">
+                                    <div class="col-12">
+                                        <i class="fa fa-calendar text-muted" />
+                                        <strong>Deadline:</strong>
+                                        <field name="deadline" />
+                                        <t
+                                            t-if="record.deadline.raw_value &lt; (new Date()).toISOString().split('T')[0] and record.status.raw_value != 'completed'">
+                                            <span class="badge badge-danger ml8">Overdue</span>
+                                        </t>
+                                    </div>
+                                </div>
+
+                                <!-- 💰 Budget -->
+                                <div class="row mt8" t-if="record.budget.raw_value">
+                                    <div class="col-12">
+                                        <i class="fa fa-money text-muted" />
+                                        <strong>Budget:</strong>
+                                        <field name="budget" widget="monetary"
+                                            options="{'currency_field': 'currency_id'}" />
+                                    </div>
+                                </div>
+
+                                <!-- 👥 Team Size -->
+                                <div class="row mt8">
+                                    <div class="col-12">
+                                        <i class="fa fa-users text-muted" />
+                                        <strong>Team:</strong> <field
+                                            name="member_count" /> members </div>
+                                </div>
                             </div>
-                            <div>
-                                <field name="start_at" />
-                            </div>
-                            <div>
-                                <field name="end_at" />
-                            </div>
-                            <div>
-                                <field name="manager_id" />
+
+                            <!-- 🎨 Card Footer with Enhanced Actions -->
+                            <div class="o_kanban_card_manage_pane">
+                                <div class="o_kanban_card_manage_section o_kanban_manage_reports">
+                                    <div>
+                                        <!-- Draft Status -->
+                                        <a name="action_move_to_planning" type="object"
+                                            t-if="record.status.raw_value == 'draft'"
+                                            class="btn btn-info btn-sm">
+                                            <i class="fa fa-edit" /> Plan </a>
+
+                                        <!-- Planning Status -->
+                                        <a name="action_start_project" type="object"
+                                            t-if="record.status.raw_value == 'planning'"
+                                            class="btn btn-primary btn-sm">
+                                            <i class="fa fa-play" /> Start </a>
+
+                                        <!-- In Progress Status -->
+                                        <a name="action_move_to_review" type="object"
+                                            t-if="record.status.raw_value == 'in-progress'"
+                                            class="btn btn-info btn-sm">
+                                            <i class="fa fa-search" /> Review </a>
+
+                                        <!-- Review Status -->
+                                        <a name="action_complete_project" type="object"
+                                            t-if="record.status.raw_value == 'review'"
+                                            class="btn btn-success btn-sm">
+                                            <i class="fa fa-check" /> Complete </a>
+
+                                        <!-- On Hold Status -->
+                                        <a name="action_resume_project" type="object"
+                                            t-if="record.status.raw_value == 'on-hold'"
+                                            class="btn btn-primary btn-sm">
+                                            <i class="fa fa-play" /> Resume </a>
+
+                                        <!-- Hold Button for Active Projects -->
+                                        <a name="action_put_on_hold" type="object"
+                                            t-if="record.status.raw_value in ['in-progress', 'planning']"
+                                            class="btn btn-warning btn-sm ml-1">
+                                            <i class="fa fa-pause" /> Hold </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </t>
@@ -92,4 +363,97 @@
             </kanban>
         </field>
     </record>
+
+    <!-- ─────────────── 🔍 PROJECT SEARCH VIEW ─────────────── -->
+    <record id="project_search_view" model="ir.ui.view">
+        <field name="name">project.search</field>
+        <field name="model">vnfield.project</field>
+        <field name="arch" type="xml">
+            <search>
+                <!-- 🔍 Search Fields -->
+                <field name="name" string="Project Name" />
+                <field name="code" string="Project Code" />
+                <field name="manager_id" string="Manager" />
+                <field name="project_owner_id" string="Owner" />
+
+                <!-- 🎯 Quick Filters -->
+                <separator />
+                <filter string="My Projects" name="my_projects"
+                    domain="[('manager_id', '=', uid)]" />
+                <filter string="In Progress" name="in_progress"
+                    domain="[('status', '=', 'in-progress')]" />
+                <filter string="Completed" name="completed"
+                    domain="[('status', '=', 'completed')]" />
+                <filter string="Overdue" name="overdue"
+                    domain="[('deadline', '&lt;', context_today().strftime('%Y-%m-%d')), ('status', 'not in', ['completed', 'canceled'])]" />
+                <filter string="High Priority" name="high_priority"
+                    domain="[('priority', 'in', ['2', '3'])]" />
+
+                <!-- 📊 Group By -->
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}" />
+                    <filter string="Manager" name="group_manager"
+                        context="{'group_by': 'manager_id'}" />
+                    <filter string="Owner" name="group_owner"
+                        context="{'group_by': 'project_owner_id'}" />
+                    <filter string="Priority" name="group_priority"
+                        context="{'group_by': 'priority'}" />
+                    <filter string="Start Date" name="group_start_date"
+                        context="{'group_by': 'start_date'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ─────────────── 📊 PROJECT ACTIONS ─────────────── -->
+    <!-- Dashboard Action -->
+    <record id="project_dashboard_action" model="ir.actions.act_url">
+        <field name="name">Project Dashboard</field>
+        <field name="url">/projects/dashboard</field>
+        <field name="target">self</field>
+    </record>
+
+    <!-- Standard Project Management Action -->
+    <record id="vnfield_project_action" model="ir.actions.act_window">
+        <field name="name">Project Management</field>
+        <field name="res_model">vnfield.project</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_id" ref="project_kanban_view" />
+        <field name="search_view_id" ref="project_search_view" />
+        <field name="context">{
+            'search_default_in_progress': 1,
+            }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first project!
+            </p>
+            <p>
+                Start managing your projects with contractors, tasks, and team members.
+                Track progress, manage deadlines, and collaborate effectively.
+            </p>
+        </field>
+    </record>
+
+    <!-- ─────────────── 📋 MENU ITEMS ─────────────── -->
+    <menuitem
+        id="menu_project_root"
+        name="Projects"
+        sequence="10"
+        action="project_dashboard_action" />
+
+    <menuitem
+        id="menu_project_dashboard"
+        name="Dashboard"
+        parent="menu_project_root"
+        action="project_dashboard_action"
+        sequence="5" />
+
+    <menuitem
+        id="menu_project_projects"
+        name="Manage Projects"
+        parent="menu_project_root"
+        action="vnfield_project_action"
+        sequence="10" />
+
 </odoo>

@@ -1,0 +1,84 @@
+<odoo>
+    <!-- ┌─────────────────────────────────────────────────────────┐ -->
+    <!-- │              📋 APPROVAL REVIEW WIZARD VIEWS           │ -->
+    <!-- └─────────────────────────────────────────────────────────┘ -->
+
+    <record model="ir.ui.view" id="approval_review_form_view">
+        <field name="name">approval.review.form</field>
+        <field name="model">vnfield.approval.review</field>
+        <field name="arch" type="xml">
+            <form string="Review Approval Step">
+                <header>
+                    <button name="action_submit_review" type="object" string="Submit Review"
+                        class="btn-primary" />
+                    <button name="action_cancel" type="object" string="Cancel"
+                        class="btn-secondary" />
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="step_name" readonly="1" />
+                        </h1>
+                        <h3>
+                            Review Approval Step
+                        </h3>
+                    </div>
+
+                    <!-- Step Information -->
+                    <group string="📋 Step Information">
+                        <group>
+                            <field name="approval_step_id" invisible="1" />
+                            <field name="approval_id" readonly="1" />
+                            <field name="requester_id" readonly="1" />
+                            <field name="approver_id" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="current_status" readonly="1"
+                                decoration-warning="current_status == 'in-progress'"
+                                decoration-success="current_status == 'approved'"
+                                decoration-danger="current_status == 'rejected'" />
+                        </group>
+                    </group>
+
+                    <!-- Decision Section -->
+                    <group string="🎯 Your Decision">
+                        <field name="decision" widget="radio" options="{'horizontal': true}" />
+                    </group>
+
+                    <!-- Comment Section -->
+                    <group string="💬 Comments">
+                        <field name="comment" nolabel="1"
+                            placeholder="Add your comment about this decision..." />
+                    </group>
+
+                    <!-- Rejection Reason (Conditional) -->
+                    <group string="❌ Rejection Details" invisible="decision != 'reject'">
+                        <field name="rejection_reason" nolabel="1"
+                            placeholder="Please provide a clear reason for rejection..." />
+                    </group>
+
+                    <!-- Instructions -->
+                    <div class="alert alert-info" role="alert">
+                        <h4>📝 Review Instructions:</h4>
+                        <ul>
+                            <li><strong>Approve:</strong> Accept this step and continue the workflow</li>
+                            <li><strong>Reject:</strong> Decline this step and terminate the entire
+                                approval</li>
+                            <li>Your decision will be recorded and all stakeholders will be notified</li>
+                        </ul>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for opening the wizard -->
+    <record id="approval_review_action" model="ir.actions.act_window">
+        <field name="name">Review Approval Step</field>
+        <field name="res_model">vnfield.approval.review</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="approval_review_form_view" />
+    </record>
+
+</odoo>

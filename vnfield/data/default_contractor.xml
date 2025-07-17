@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═              🏠 DEFAULT CONTRACTOR DATA                  ═ -->
+    <!-- ═           System Initialization Data                     ═ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- 🏠 Default Internal Contractor -->
+    <record id="default_internal_contractor" model="vnfield.contractor">
+        <field name="name">Default Internal Contractor</field>
+        <field name="is_default_contractor" eval="True" />
+        <field name="specialization">General Construction Management</field>
+        <field name="email">admin@vnfield.com</field>
+        <field name="phone">+84-123-456-789</field>
+        <field name="address">Đại diện toàn bộ ứng dụng nhà thầu</field>
+        <field name="rating">5.0</field>
+        <field name="active" eval="True" />
+    </record>
+
+    <!-- 👑 Assign Default Admin User to Default Contractor -->
+    <function model="res.users" name="write">
+        <value model="res.users" search="[('login', '=', 'admin')]" />
+        <value
+            eval="{
+            'contractor_id': ref('default_internal_contractor'),
+            'specialization': 'System Administration'
+        }" />
+    </function>
+
+    <!-- 👑 Set Admin as Leader of Default Contractor -->
+    <function model="vnfield.contractor" name="write">
+        <value model="vnfield.contractor" search="[('id', '=', ref('default_internal_contractor'))]" />
+        <value
+            eval="{
+            'leader_id': ref('base.user_admin')
+        }" />
+    </function>
+
+</odoo>
